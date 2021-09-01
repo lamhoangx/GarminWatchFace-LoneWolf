@@ -1,0 +1,8 @@
+<properties>
+
+    <property id="CaloriesGoalMode" type="number">0</property>
+    <property id="CaloriesGoalInput" type="number">10</property>
+
+    <property id="BackgroundColor" type="number">0x000000</property>
+    
+</properties>

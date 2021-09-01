@@ -1,0 +1,28 @@
+<drawables>
+    <bitmap id="LauncherIcon" filename="launcher_icon.png" />
+    
+    <bitmap id="backdrop" filename="bg_w.png" dithering="none"/>
+    
+    <bitmap id="battery_f" filename="battery_100.png" dithering="none"/>
+    <bitmap id="battery_m" filename="battery_50.png" dithering="none"/>
+    <bitmap id="battery_l" filename="battery_10.png" dithering="none"/>
+    
+    <bitmap id="kcal_bg" filename="kcal.png" dithering="none"/>
+    
+    <bitmap id="moon_id_0" filename="moon_00.png" />
+    <bitmap id="moon_id_1" filename="moon_01.png" />
+    <bitmap id="moon_id_2" filename="moon_02.png" />
+    <bitmap id="moon_id_3" filename="moon_03.png" />
+    <bitmap id="moon_id_4" filename="moon_04.png" />
+    <bitmap id="moon_id_5" filename="moon_05.png" />
+    <bitmap id="moon_id_6" filename="moon_06.png" />
+    <bitmap id="moon_id_7" filename="moon_07.png" />
+    <bitmap id="moon_id_8" filename="moon_08.png" />
+    <bitmap id="moon_id_9" filename="moon_09.png" />
+    <bitmap id="moon_id_10" filename="moon_10.png" />
+    <bitmap id="moon_id_11" filename="moon_11.png" />
+    <bitmap id="moon_id_12" filename="moon_12.png" />
+    <bitmap id="moon_id_13" filename="moon_13.png" />
+    <bitmap id="moon_id_14" filename="moon_14.png" />
+    
+</drawables>

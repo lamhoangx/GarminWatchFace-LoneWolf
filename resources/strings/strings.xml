@@ -1,0 +1,23 @@
+<strings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:noNamespaceSchemaLocation="strings.xsd">
+    <string id="AppName">Lone Wolf</string>
+    
+    <string id="GoalMode">Calories goal mode: </string>
+    <string id="CaloriesGoal">Manual calories goal (kCal): </string>
+
+	<string id="Manual">Manual</string>
+	<string id="Auto">Auto</string>
+	
+    <string id="N100">100</string>
+   	<string id="N200">200</string>
+	<string id="N300">300</string>
+	<string id="N400">400</string>
+	<string id="N500">500</string>
+	<string id="N600">600</string>
+	<string id="N700">700</string>
+	<string id="N800">800</string>
+	<string id="N900">900</string>
+	<string id="N1000">1000</string>
+	
+    
+</strings>
