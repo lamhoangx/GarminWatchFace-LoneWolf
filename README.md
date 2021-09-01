@@ -23,4 +23,4 @@ Under the hood, the watch face is just refresh once per minute to save battery
 </table>
 
 ....<br>
-Make my color dont like sơn MyColor
+
