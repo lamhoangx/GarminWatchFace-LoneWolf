@@ -14,11 +14,11 @@ Under the hood, the watch face is just refresh once per minute to save battery
 <table>
     <tr>
         <td><img src="screenshots/i1.png" width="400"/></td>
-        <td><img src="screenshots/i2.jpeg" width="400"/></td>
+        <td><img src="screenshots/i2.png" width="400"/></td>
     </tr>
     <tr>
-        <td><img src="screenshots/i3.jpeg" width="400"/></td>
-        <td><img src="screenshots/i4.jpeg" width="400"/></td>
+        <td><img src="screenshots/i3.png" width="400"/></td>
+        <td><img src="screenshots/i4.png" width="400"/></td>
     </tr>
 </table>
 
