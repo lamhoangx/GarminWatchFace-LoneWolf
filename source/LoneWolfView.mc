@@ -354,8 +354,8 @@ class LoneWolfView extends WatchUi.WatchFace {
     	// draw progress
     	// Draw Current/Goal into
     	
-    	// stepGoal = 2550;
-		// stepCount = 1028;
+//    	stepGoal = 2550;
+//		stepCount = 1028;
     	
     	// draw current step
     	feetStepCurrentInfo.setText(Lang.format("$1$", [stepCount.toString()]));
@@ -427,6 +427,9 @@ class LoneWolfView extends WatchUi.WatchFace {
     
     // formula to calculate the active calories
     function calActiveCalories() {
+//    	if(true) {
+//    		return 88;
+//    	}
     	var today = Gregorian.info(Time.now(), Time.FORMAT_MEDIUM);
 		var profile = UserProfile.getProfile();
 		var age = today.year - profile.birthYear;
