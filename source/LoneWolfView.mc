@@ -12,6 +12,7 @@ using Toybox.Time.Gregorian;
 using Toybox.Time;
 using Toybox.WatchUi as Ui;
 using Toybox.ActivityMonitor as AM;
+using Toybox.Activity;
 
 using Toybox.Position;
 using Toybox.System;
@@ -30,8 +31,13 @@ class LoneWolfView extends WatchUi.WatchFace {
 	// coordinate moon status
 	hidden var moonSX;
 	hidden var moonSY;
+	// Day
+	hidden var cYear = -1;
+	hidden var cMonth = -1;
+	hidden var cDay = -1;
 	// Time
-	hidden var timer;
+	hidden var hourTimer;
+	hidden var minutesTimer;
 	hidden var weeker;
 	// Pin 9x16
 	var pinState;
@@ -44,9 +50,16 @@ class LoneWolfView extends WatchUi.WatchFace {
 	hidden var kcalPosX;
 	hidden var kcalPosY;
 	hidden var kcalGoalInfo;
+	// Feet
+	hidden var feetIcon;
+	hidden var feetPosX;
+	hidden var feetPosY;
+	hidden var feetStepCurrentInfo;
+	hidden var feetGoalInfo;
 	
 	// Optimize threshold
 	hidden var currentMin;
+	hidden var daysInfo = null;
 
     function initialize() {
         WatchFace.initialize();
@@ -57,16 +70,20 @@ class LoneWolfView extends WatchUi.WatchFace {
         screenWidth = mySettings.screenWidth;
         screenHeight = mySettings.screenHeight;
         // Moon coordinate, moon's bitmap is 32x32
-        moonSX = (screenWidth) / 2 - 6;
-        moonSY = 2;
+        moonSX = (screenWidth / 2) + 10;
+        moonSY = (screenHeight / 2) + 41;
         // Pin
         pinState = -1;
         pinPosX = screenWidth / 2 - 12;
         pinPosY = screenHeight - 18;
         // Kcal
         kcalIcon = Ui.loadResource(Rez.Drawables.kcal_bg);
-        kcalPosX = screenWidth / 2 + 4;
-        kcalPosY = screenHeight - 18;
+        kcalPosX = screenWidth / 2 - 12;
+        kcalPosY = screenHeight - 32;
+        // Feet
+        feetIcon = Ui.loadResource(Rez.Drawables.feet);
+        feetPosX = screenWidth / 2 + 4;
+        feetPosY = screenHeight - 18;
         
         currentMin = -1;
         
@@ -78,48 +95,74 @@ class LoneWolfView extends WatchUi.WatchFace {
     // Load your resources here
     function onLayout(dc as Dc) as Void {
         setLayout(Rez.Layouts.WatchFace(dc));
+        requestReDraw();
     }
 
     // Called when this View is brought to the foreground. Restore
     // the state of this View and prepare it to be shown. This includes
     // loading resources into memory.
     function onShow() as Void {
-    	timer = new WatchUi.Text({
+    	hourTimer = new WatchUi.Text({
             :text=>"",
-            :color=>Graphics.COLOR_BLACK,
-            :font=>Graphics.FONT_SYSTEM_NUMBER_MEDIUM,
-            :locX =>screenWidth/2 - 32,
-            :locY=> (screenHeight/2) - 48,
-            :justification=>Graphics.TEXT_JUSTIFY_LEFT
+            :color=>Graphics.COLOR_WHITE,
+            :font=>Graphics.FONT_NUMBER_THAI_HOT,
+            :locX=>(screenWidth/2),
+            :locY=>(screenHeight/2) - 16,
+            :justification=>Graphics.TEXT_JUSTIFY_VCENTER|Graphics.TEXT_JUSTIFY_CENTER
+        });
+        minutesTimer = new WatchUi.Text({
+            :text=>"",
+            :color=>Graphics.COLOR_WHITE,
+            :font=>Graphics.FONT_NUMBER_MEDIUM,
+            :locX=>(screenWidth/2) + 66,
+            :locY=>(screenHeight/2) - 66,
+            :justification=>Graphics.TEXT_JUSTIFY_CENTER
         });
         weeker = new WatchUi.Text({
             :text=>"",
-            :color=>Graphics.COLOR_BLACK,
-            :font=>Graphics.FONT_SYSTEM_TINY,
-            :locX =>screenWidth/2,
-            :locY=>(screenHeight/2),
-            :justification=>Graphics.TEXT_JUSTIFY_LEFT
+            :color=>Graphics.COLOR_WHITE,
+            :font=>Graphics.FONT_XTINY,
+            :locX =>screenWidth/2 + 75,
+            :locY=>(screenHeight/2) + 40,
+            :justification=>Graphics.TEXT_JUSTIFY_VCENTER|Graphics.TEXT_JUSTIFY_RIGHT
         });
         pinStatus = new WatchUi.Text({
             :text=>"",
-            :color=>Graphics.COLOR_BLACK,
+            :color=>Graphics.COLOR_WHITE,
             :font=>Graphics.FONT_XTINY,
             :locX =>pinPosX - 2,
             :locY=>pinPosY - 2,
             :justification=>Graphics.TEXT_JUSTIFY_RIGHT
         });
 
-		if(debugInfo) {
-	        kcalGoalInfo = new WatchUi.Text({
+		kcalGoalInfo = new WatchUi.Text({
 	            :text=>"",
-	            :color=>Graphics.COLOR_BLACK,
+	            :color=>Graphics.COLOR_WHITE,
 	            :font=>Graphics.FONT_XTINY,
-	            :locX =>screenWidth / 2 + 4,
-	            :locY=>screenHeight - 36,
-	            :justification=>Graphics.TEXT_JUSTIFY_LEFT
+	            :locX =>screenWidth / 2 - 14,
+	            :locY=>screenHeight - 26,
+	            :justification=>Graphics.TEXT_JUSTIFY_VCENTER|Graphics.TEXT_JUSTIFY_RIGHT
 	        });
-        }
-        currentMin = 0;
+	        
+	    feetStepCurrentInfo = new WatchUi.Text({
+	            :text=>"",
+	            :color=>Graphics.COLOR_WHITE,
+	            :font=>Graphics.FONT_XTINY,
+	            :locX =>screenWidth / 2 + 6,
+	            :locY=>screenHeight - 26,
+	            :justification=>Graphics.TEXT_JUSTIFY_VCENTER|Graphics.TEXT_JUSTIFY_LEFT
+	        });
+	        
+	    feetGoalInfo = new WatchUi.Text({
+	            :text=>"",
+	            :color=>Graphics.COLOR_WHITE,
+	            :font=>Graphics.FONT_XTINY,
+	            :locX =>screenWidth - 2,
+	            :locY=>screenHeight / 2 + 8,
+	            :justification=>Graphics.TEXT_JUSTIFY_VCENTER|Graphics.TEXT_JUSTIFY_RIGHT
+	        });
+	        
+        requestReDraw();
     }
 
     // Update the view
@@ -128,7 +171,9 @@ class LoneWolfView extends WatchUi.WatchFace {
     		return;
     	}
     	
-        timer.setText(getCurrentTime());
+        hourTimer.setText(getCurrentHourTime());
+        minutesTimer.setText(getCurrentMinutesTime());
+        
         weeker.setText(getCurrentDate());
 
         // Call the parent onUpdate function to redraw the layout
@@ -138,7 +183,8 @@ class LoneWolfView extends WatchUi.WatchFace {
         dc.drawBitmap(0, 0, backdrop);
         
         // DateTime
-        timer.draw(dc);
+        hourTimer.draw(dc);
+        minutesTimer.draw(dc);
         weeker.draw(dc);
         
         //
@@ -148,6 +194,8 @@ class LoneWolfView extends WatchUi.WatchFace {
         drawPinStatus(dc, batStatus);
         // Kcal
         drawCaloGoalProgress(dc);
+        // Feet
+        drawFeetStepProgress(dc);
         
         // moon pharse
         dc.drawBitmap(moonSX, moonSY, calcMoon());
@@ -157,14 +205,22 @@ class LoneWolfView extends WatchUi.WatchFace {
     // state of this View here. This includes freeing resources from
     // memory.
     function onHide() as Void {
+    	requestReDraw();
     }
 
     // The user has just looked at their watch. Timers and animations may be started here.
     function onExitSleep() as Void {
+    	requestReDraw();
     }
 
     // Terminate any active timers and prepare for slow updates.
     function onEnterSleep() as Void {
+    	requestReDraw();
+    }
+    
+    function requestReDraw() {
+    	currentMin = -1;
+    	daysInfo = null;
     }
     
     // utils
@@ -176,6 +232,18 @@ class LoneWolfView extends WatchUi.WatchFace {
     	currentMin = clockTime.min;
     	return true;
     }
+    function getCurrentHourTime() {
+    	var clockTime = System.getClockTime();
+    	currentMin = clockTime.min;
+        var timeString = Lang.format("$1$", [clockTime.hour.format("%02d")]);
+        return timeString;
+    }
+    function getCurrentMinutesTime() {
+    	var clockTime = System.getClockTime();
+    	currentMin = clockTime.min;
+        var timeString = Lang.format("$1$", [clockTime.min.format("%02d")]);
+        return timeString;
+    }
     function getCurrentTime() {
     	var clockTime = System.getClockTime();
     	currentMin = clockTime.min;
@@ -184,17 +252,41 @@ class LoneWolfView extends WatchUi.WatchFace {
     }
     function getCurrentDate() {
     	var now = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
-		var month = now.month;
-		var day = now.day;
+    	
+    	if(daysInfo != null && cYear == now.year && cMonth == now.month && cDay == now.day ) {
+    		return daysInfo;
+    	}
+    	
+    	// newest info
+    	cYear = now.year;
+		cMonth = now.month;
+		cDay = now.day;
+		
 		var day_of_week = now.day_of_week;
 		var weekdays = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 		
 		var strDayOfW = weekdays[day_of_week-1];
-		var strDay = day.format("%02d");
-		var strMonth = month.format("%02d");
+		var strDay = cDay.format("%02d");
+		var strMonth = cMonth.format("%02d");
 		
-        var timeString = Lang.format("$1$, $2$-$3$", [strDayOfW, strDay, strMonth]);
-		return timeString;
+		var dateUtils = new LunarDateUtils();
+		var lunalTime = dateUtils.getLunarDate(cYear, cMonth, cDay);
+		
+        daysInfo = Lang.format("$1$, $2$-$3$\n$4$", [strDayOfW, strDay, strMonth, lunalTime]);
+		return daysInfo;
+    }
+    function getCurrentLunarDate() {
+    	var now = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
+    	
+    	var year = now.year;
+		var month = now.month;
+		var day = now.day;
+		
+		var dateUtils = new LunarDateUtils();
+		var lunalTime = dateUtils.getLunarDate(year, month, day);
+		
+		return lunalTime;
+    	
     }
     
     function drawSeparateCenter(dc as Dc) {
@@ -202,68 +294,86 @@ class LoneWolfView extends WatchUi.WatchFace {
     }
     
     function drawCaloGoalProgress(dc as Dc) {
-    	
+        
     	dc.drawBitmap(kcalPosX, kcalPosY, kcalIcon);
+    	
+		var calo = calActiveCalories();
+		kcalGoalInfo.setText(Lang.format("$1$", [calo.toString()]));
+		kcalGoalInfo.draw(dc);
+		
+    }
+    function drawFeetStepProgress(dc as Dc) {
+    	
+    	// icon feet at bottom
+    	dc.drawBitmap(feetPosX, feetPosY, feetIcon);
+    	// icon feet at 3h direction
+    	dc.drawBitmap(screenWidth - 15, screenHeight / 2 + 14, feetIcon);
     	
     	if(isScreenShapeRect) {return;}
     	
-    	// goal mode
-    	var goalMode = Application.getApp().getProperty("CaloriesGoalMode");
-    	var kcalGoal = 0;
-    	
-        if(goalMode <= 0) { // Auto
-        	kcalGoal = getDefaultActiveCaloriesGoal();
-        } else if(goalMode == 1) { // Manual
-        	kcalGoal = Application.getApp().getProperty("CaloriesGoalInput");
-        } else if(goalMode == 2) { // Select
-        	kcalGoal = 100;
-        } else if(goalMode == 3) {
-        	kcalGoal = 200;
-        } else if(goalMode == 4) {
-        	kcalGoal = 300;
-        } else if(goalMode == 5) {
-        	kcalGoal = 400;
-        } else if(goalMode == 6) {
-        	kcalGoal = 500;
-        } else if(goalMode == 7) {
-        	kcalGoal = 600;
-        } else if(goalMode == 8) {
-        	kcalGoal = 700;
-        } else if(goalMode == 9) {
-        	kcalGoal = 800;
-        } else if(goalMode == 10) {
-        	kcalGoal = 900;
-        } else if(goalMode == 11) {
-        	kcalGoal = 1000;
-        }
-
-        if(kcalGoal <= 0) {
-        	kcalGoal = getDefaultActiveCaloriesGoal();
-        }
-    	if(kcalGoal <= 0) {return;}
-    
-    	var calo = calActiveCalories();
-    	if(kcalGoalInfo != null) { // debug
-    		calo = 100;
+    	// current feet  step
+		var stepGoal = ActivityMonitor.getInfo().stepGoal;
+    	var stepCount = ActivityMonitor.getInfo().steps;
+    	if(stepGoal == null || stepCount == null || stepGoal <= 0) {
+    		return;
     	}
-    	var percent = calo.toNumber().toFloat()/kcalGoal.toNumber().toFloat();
-    	var totalDiagram = 83 + 90;
+	
+		//
+		var startP = 79;
+		var endP = 18;
+    	var percent = 100;
+    	// direction of 6h -> 3h - padding = 83
+    	var totalDiagram = startP;
     	var currentDiagram = totalDiagram * percent;
     	
     	var rootCoorX = screenWidth / 2;
     	var rootCoorY = screenHeight / 2;
     	
-    	var edgePadding = 2;
+    	var edgePadding = 5;
 		var diagramRadius = screenWidth/2 - 2;
-		var diagramStartDeg = -83;
-		var diagramEndDeg = currentDiagram + diagramStartDeg;
-		if(diagramEndDeg > 90) {
-			diagramEndDeg = 90;
-		}
+		var diagramStartDeg = -startP;
+		var diagramEndDeg = -endP;
 		
-		if(kcalGoalInfo != null) { // debug info
-			kcalGoalInfo.setText(Lang.format("$1$/$2$", [calo.toString(), kcalGoal]));
-			kcalGoalInfo.draw(dc);
+		
+		//dc.setAntiAlias(true);
+    	dc.setColor(0x383838, 0x383838);
+    	// draw bottom line
+    	var bPadding = 5;
+    	var barBoldH = 1;
+    	var bX = rootCoorX - bPadding;
+    	var bY = screenHeight - bPadding;
+
+    	// base line
+    	dc.drawArc(rootCoorX, rootCoorY, diagramRadius - edgePadding, Graphics.ARC_COUNTER_CLOCKWISE, diagramStartDeg, diagramEndDeg);
+    	// progressBar
+    	for(var i = 0; i <  barBoldH; i ++) {
+    		dc.drawArc(rootCoorX, rootCoorY, diagramRadius - edgePadding - i, Graphics.ARC_COUNTER_CLOCKWISE, diagramStartDeg, diagramEndDeg);
+    	}
+    	
+    	
+    	// draw progress
+    	// Draw Current/Goal into
+    	
+    	// stepGoal = 2550;
+		// stepCount = 1028;
+    	
+    	// draw current step
+    	feetStepCurrentInfo.setText(Lang.format("$1$", [stepCount.toString()]));
+    	feetStepCurrentInfo.draw(dc);
+    	
+    	feetGoalInfo.setText(Lang.format("$1$", [stepGoal.toString()]));
+    	feetGoalInfo.draw(dc);
+    	// draw progress
+    	percent = stepCount.toNumber().toFloat()/stepGoal.toNumber().toFloat();
+    	// direction of 6h -> 3h - padding = 83
+    	currentDiagram = totalDiagram * percent;
+    	
+		diagramRadius = screenWidth/2 - 2;
+		diagramStartDeg = -startP;
+		diagramEndDeg = currentDiagram + diagramStartDeg;
+		// direction 3h is 0 (coordinate)
+		if(diagramEndDeg > -endP) {
+			diagramEndDeg = -endP;
 		}
 		
 		if(diagramEndDeg <= diagramStartDeg) {
@@ -271,13 +381,13 @@ class LoneWolfView extends WatchUi.WatchFace {
 		}
 		
 		
-//		dc.setAntiAlias(true);
-    	dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+		//dc.setAntiAlias(true);
+    	dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
     	// draw bottom line
-    	var bPadding = 5;
-    	var barBoldH = 5;
-    	var bX = rootCoorX - bPadding;
-    	var bY = screenHeight - bPadding;
+    	bPadding = 5;
+    	barBoldH = 3;
+    	bX = rootCoorX - bPadding;
+    	bY = screenHeight - bPadding;
 
     	// base line
     	dc.drawArc(rootCoorX, rootCoorY, diagramRadius - edgePadding, Graphics.ARC_COUNTER_CLOCKWISE, diagramStartDeg, diagramEndDeg);
@@ -302,20 +412,12 @@ class LoneWolfView extends WatchUi.WatchFace {
     			// hight
     			pinC = 2;
     		}
-    		pinStatus.setColor(Graphics.COLOR_BLACK);
+    		pinStatus.setColor(Graphics.COLOR_WHITE);
     	}
     	if(pinState == pinC && pinIcon != null) {
     		// can reuse pin resource
     	} else {
-    		pinState = pinC;
-    		pinIcon = null;
-    		if(pinState == 2) {
-    			pinIcon = Ui.loadResource(Rez.Drawables.battery_f);
-    		} else if(pinState == 1) {
-    			pinIcon = Ui.loadResource(Rez.Drawables.battery_m);
-    		} else {
-    			pinIcon = Ui.loadResource(Rez.Drawables.battery_l);
-    		}	
+    		pinIcon = Ui.loadResource(Rez.Drawables.battery);	
     	}
     
     	dc.drawBitmap(pinPosX, pinPosY, pinIcon);
@@ -346,6 +448,7 @@ class LoneWolfView extends WatchUi.WatchFace {
 		return 0;
 		
 	}
+	
 	
 	// estimate calories goal by age
 	function getDefaultActiveCaloriesGoal() {
@@ -386,7 +489,7 @@ class LoneWolfView extends WatchUi.WatchFace {
 			return 180;
 		} else if(age > 10) {
 			return 150;
-		} else else {
+		} else {
 			return 80;
 		}
 	}

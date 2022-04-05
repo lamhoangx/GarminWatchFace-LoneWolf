@@ -1,11 +1,13 @@
 <drawables>
     <bitmap id="LauncherIcon" filename="launcher_icon.png" />
     
-    <bitmap id="backdrop" filename="bg_w.png" dithering="none"/>
+    <bitmap id="backdrop" filename="bg_b.png" dithering="none"/>
     
     <bitmap id="battery_f" filename="battery_100.png" dithering="none"/>
     <bitmap id="battery_m" filename="battery_50.png" dithering="none"/>
     <bitmap id="battery_l" filename="battery_10.png" dithering="none"/>
+    <bitmap id="battery" filename="battery.png" dithering="none"/>
+    <bitmap id="feet" filename="feet.png" dithering="none"/>
     
     <bitmap id="kcal_bg" filename="kcal.png" dithering="none"/>
     
