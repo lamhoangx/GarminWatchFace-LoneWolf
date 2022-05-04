@@ -1,24 +1,4 @@
 <settings>
 
-    <setting propertyKey="@Properties.CaloriesGoalMode" title="@Strings.GoalMode">
-        <settingConfig type="list">
-        	<listEntry value="0">@Strings.Auto</listEntry>
-        	<listEntry value="1">@Strings.Manual</listEntry>
-        	<listEntry value="2">@Strings.N100</listEntry>
-        	<listEntry value="3">@Strings.N200</listEntry>
-        	<listEntry value="4">@Strings.N300</listEntry>
-        	<listEntry value="5">@Strings.N400</listEntry>
-        	<listEntry value="6">@Strings.N500</listEntry>
-        	<listEntry value="7">@Strings.N600</listEntry>
-        	<listEntry value="8">@Strings.N700</listEntry>
-        	<listEntry value="9">@Strings.N800</listEntry>
-        	<listEntry value="10">@Strings.N900</listEntry>
-        	<listEntry value="11">@Strings.N1000</listEntry>
-        </settingConfig>
-    </setting>
-    
-        <setting propertyKey="@Properties.CaloriesGoalInput" title="@Strings.CaloriesGoal">
-        <settingConfig type="numeric" min="10" required="false"/>
-    </setting>
     
 </settings>

@@ -19,15 +19,15 @@ using Toybox.System;
 
 class LoneWolfView extends WatchUi.WatchFace {
 
-	var debugInfo = false;
+	hidden var debugInfo = false;
 	
 	// backdrop image
-	var backdrop;
+	// hidden var backdrop;
 
-	var isScreenShapeRect;
+	hidden var isScreenShapeRect;
 	// Dimension
-	var screenWidth;
-	var screenHeight;
+	hidden var screenWidth;
+	hidden var screenHeight;
 	// coordinate moon status
 	hidden var moonSX;
 	hidden var moonSY;
@@ -88,35 +88,23 @@ class LoneWolfView extends WatchUi.WatchFace {
         currentMin = -1;
         
         // background
-        backdrop = Ui.loadResource(Rez.Drawables.backdrop);
+        // backdrop = Ui.loadResource(Rez.Drawables.backdrop);
         
-    }
-
-    // Load your resources here
-    function onLayout(dc as Dc) as Void {
-        setLayout(Rez.Layouts.WatchFace(dc));
-        requestReDraw();
-    }
-
-    // Called when this View is brought to the foreground. Restore
-    // the state of this View and prepare it to be shown. This includes
-    // loading resources into memory.
-    function onShow() as Void {
-    	hourTimer = new WatchUi.Text({
+        hourTimer = new WatchUi.Text({
             :text=>"",
             :color=>Graphics.COLOR_WHITE,
             :font=>Graphics.FONT_NUMBER_THAI_HOT,
-            :locX=>(screenWidth/2),
-            :locY=>(screenHeight/2) - 16,
-            :justification=>Graphics.TEXT_JUSTIFY_VCENTER|Graphics.TEXT_JUSTIFY_CENTER
+            :locX=>(screenWidth/2) + 16,
+            :locY=>(screenHeight/2) - 12,
+            :justification=>Graphics.TEXT_JUSTIFY_VCENTER|Graphics.TEXT_JUSTIFY_RIGHT
         });
         minutesTimer = new WatchUi.Text({
             :text=>"",
             :color=>Graphics.COLOR_WHITE,
             :font=>Graphics.FONT_NUMBER_MEDIUM,
-            :locX=>(screenWidth/2) + 66,
-            :locY=>(screenHeight/2) - 66,
-            :justification=>Graphics.TEXT_JUSTIFY_CENTER
+            :locX=>(screenWidth/2) + 23,
+            :locY=>(screenHeight/2) - 32,
+            :justification=>Graphics.TEXT_JUSTIFY_VCENTER|Graphics.TEXT_JUSTIFY_LEFT
         });
         weeker = new WatchUi.Text({
             :text=>"",
@@ -161,7 +149,19 @@ class LoneWolfView extends WatchUi.WatchFace {
 	            :locY=>screenHeight / 2 + 8,
 	            :justification=>Graphics.TEXT_JUSTIFY_VCENTER|Graphics.TEXT_JUSTIFY_RIGHT
 	        });
-	        
+        
+    }
+
+    // Load your resources here
+    function onLayout(dc as Dc) as Void {
+    	requestReDraw();
+        setLayout(Rez.Layouts.WatchFace(dc));
+    }
+
+    // Called when this View is brought to the foreground. Restore
+    // the state of this View and prepare it to be shown. This includes
+    // loading resources into memory.
+    function onShow() as Void {
         requestReDraw();
     }
 
@@ -171,16 +171,22 @@ class LoneWolfView extends WatchUi.WatchFace {
     		return;
     	}
     	
-        hourTimer.setText(getCurrentHourTime());
-        minutesTimer.setText(getCurrentMinutesTime());
-        
+    	var clockTime = System.getClockTime();
+    	currentMin = clockTime.min;
+        var timeHour = Lang.format("$1$", [clockTime.hour.format("%02d")]);
+        var timeMin = Lang.format("$1$", [clockTime.min.format("%02d")]);
+    	
+        hourTimer.setText(timeHour);
+        minutesTimer.setText(timeMin);
         weeker.setText(getCurrentDate());
+        
+        var batStatus = System.getSystemStats().battery.toNumber();	
 
         // Call the parent onUpdate function to redraw the layout
         View.onUpdate(dc);
                
         // draw background image
-        dc.drawBitmap(0, 0, backdrop);
+        //dc.drawBitmap(0, screenHeight/2 - 68, backdrop);
         
         // DateTime
         hourTimer.draw(dc);
@@ -190,7 +196,7 @@ class LoneWolfView extends WatchUi.WatchFace {
         //
         drawSeparateCenter(dc);
         // Pin
-        var batStatus = System.getSystemStats().battery.toNumber();	
+        
         drawPinStatus(dc, batStatus);
         // Kcal
         drawCaloGoalProgress(dc);
@@ -199,6 +205,7 @@ class LoneWolfView extends WatchUi.WatchFace {
         
         // moon pharse
         dc.drawBitmap(moonSX, moonSY, calcMoon());
+        
     }
 
     // Called when this View is removed from the screen. Save the
@@ -232,24 +239,7 @@ class LoneWolfView extends WatchUi.WatchFace {
     	currentMin = clockTime.min;
     	return true;
     }
-    function getCurrentHourTime() {
-    	var clockTime = System.getClockTime();
-    	currentMin = clockTime.min;
-        var timeString = Lang.format("$1$", [clockTime.hour.format("%02d")]);
-        return timeString;
-    }
-    function getCurrentMinutesTime() {
-    	var clockTime = System.getClockTime();
-    	currentMin = clockTime.min;
-        var timeString = Lang.format("$1$", [clockTime.min.format("%02d")]);
-        return timeString;
-    }
-    function getCurrentTime() {
-    	var clockTime = System.getClockTime();
-    	currentMin = clockTime.min;
-        var timeString = Lang.format("$1$:$2$", [clockTime.hour.format("%02d"), clockTime.min.format("%02d")]);
-        return timeString;
-    }
+   
     function getCurrentDate() {
     	var now = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
     	
@@ -354,8 +344,8 @@ class LoneWolfView extends WatchUi.WatchFace {
     	// draw progress
     	// Draw Current/Goal into
     	
-//    	stepGoal = 2550;
-//		stepCount = 1028;
+    	// stepGoal = 1000;
+		// stepCount = 2500;
     	
     	// draw current step
     	feetStepCurrentInfo.setText(Lang.format("$1$", [stepCount.toString()]));
@@ -450,51 +440,5 @@ class LoneWolfView extends WatchUi.WatchFace {
 		}
 		return 0;
 		
-	}
-	
-	
-	// estimate calories goal by age
-	function getDefaultActiveCaloriesGoal() {
-		var today = Gregorian.info(Time.now(), Time.FORMAT_MEDIUM);
-		var profile = UserProfile.getProfile();
-		var age = today.year - profile.birthYear;
-		if(age > 80) {
-			return 30;
-		} else if(age > 75) {
-			return 40;
-		} else if(age > 70) {
-			return 45;
-		} else if(age > 65) {
-			return 55;
-		} else if(age > 60) {
-			return 80;
-		} else if(age > 65) {
-			return 90;
-		} else if(age > 50) {
-			return 120;
-		} else if(age > 45) {
-			return 140;
-		} else if(age > 40) {
-			return 160;
-		} else if(age > 35) {
-			return 180;
-		} else if(age > 30) {
-			return 190;
-		} else if(age > 25) {
-			return 250;
-		} else if(age > 20) {
-			return 300;
-		} else if(age > 18) {
-			return 250;
-		} else if(age > 16) {
-			return 200;
-		} else if(age > 14) {
-			return 180;
-		} else if(age > 10) {
-			return 150;
-		} else {
-			return 80;
-		}
-	}
-    
+	}    
 }

@@ -16,8 +16,7 @@ class Background extends WatchUi.Drawable {
 
     function draw(dc as Dc) as Void {
         // Set the background color then call to clear the screen
-        dc.setColor(Graphics.COLOR_TRANSPARENT, 0xbdbcc5);
-		// dc.setColor(Graphics.COLOR_TRANSPARENT, 0x000000);
+        dc.setColor(Graphics.COLOR_TRANSPARENT, 0x000000);
         dc.clear();
         
     }
